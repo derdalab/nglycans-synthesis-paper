@@ -1,0 +1,87 @@
+---
+params:
+        saveName: "DE_TEST.txt"
+        testing_data: NA
+        difference.tests: NA
+        main.table: NA
+title: "LiGA Comparison"
+mainfont: Arial
+output:
+    pdf_document:
+        dev: cairo_pdf
+        latex_engine: xelatex
+        keep_tex: true
+header-includes:
+  - \usepackage{booktabs}
+  - \usepackage{longtable}
+  - \usepackage{float}
+  - \usepackage{colortbl}
+  - \usepackage{xcolor}
+---
+
+```{r setup, echo = FALSE, include = FALSE, results = 'asis'}
+# Loading Required Libraries
+# This is a test script for DE analysis, the input data are table files
+# The output of this script is a set of pair-wise comparison tables, including original reads, logFoldChanges, pValue and adjusted p-Value
+library(edgeR)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(knitr)
+library(kableExtra)
+library(stringr)
+```
+
+```{r getPrams, echo=FALSE, results="asis", out.width="0.8337\\paperwidth", fig.width = 7.1, fig.height = 3.3}
+difference.tests <- params$difference.tests
+testing_data <- params$testing_data
+main.table <- params$main.table
+for(i in 1:length(difference.tests)){
+    print(difference.tests[[i]]$plot)
+    cat("\n\n**", testing_data$Contrasts$Type[i], "** data columns: ", sep = "")
+    cat(paste0(colnames(testing_data$table)[difference.tests[[i]]$data1.set], collapse = ", "))
+    cat("\n\n**", testing_data$Contrasts$Reference[i], "** data columns: ", sep = "")
+    cat(paste0(colnames(testing_data$table)[difference.tests[[i]]$data2.set], collapse = ", "))
+    cat("\n\n")
+}
+```
+```{r tables, echo=FALSE, results="asis"}
+
+kable(main.table[order(main.table$PValue),c("Barcode", "SDB", "Type", "Reference", "Test.CPM", "Control.CPM", "Valid", "logFC", "PValue", "QValue")],
+        align = c('l' ,'l', 'l', 'l', 'r', 'r', 'l', 'r', 'r', 'r'),
+        digits = c(0, 0, 0, 0, 0, 0, 0, 3, 3, 3),
+        row.names = FALSE, longtable = TRUE, booktabs = TRUE) %>%
+    kable_styling(latex_options = "striped", "repeat_header")
+
+display.table <- data.frame(Glycan = sub("-\\[[^[]*\\]$", "",  testing_data$table$Barcode), 
+                            Density = sub(".*-\\[([^[]*)\\]$", "\\1", testing_data$table$Barcode),
+                            SDB = ifelse(is.na(testing_data$table$SDB), "Other", testing_data$table$SDB),
+                            lapply(testing_data$Column.types,
+                                   function(x){setNames(testing_data$table[,x],
+                                                        1:sum(x))}
+                                  ))
+
+for(i in 1:ncol(testing_data$Column.types)){
+    if(any(testing_data$Column.types[,i])){
+        count.table <- testing_data$table[,c("Barcode", "SDB")]
+        header.above <- c(" " = 2)
+        filenames <- colnames(testing_data$table)[testing_data$Column.types[,i]]
+        for(name in unique(sort(sub("[0-9]*$", "", filenames)))){
+            matching.names <- name == substr(filenames, 1, nchar(name))
+            matching.cols <- colnames(testing_data$table) %in% filenames[matching.names]
+            short.col.names <- substr(colnames(testing_data$table)[matching.cols], nchar(name)+1, 999)
+            count.table <- data.frame(count.table, testing_data$table[,matching.cols],
+                                      check.names = FALSE)
+            colnames(count.table)[(ncol(count.table)-sum(matching.cols)+1):ncol(count.table)] <- short.col.names
+            header.above <- c(header.above, name = sum(matching.cols))
+            names(header.above)[length(header.above)] <- name   # because the line above does not work
+        }
+        caption.text <- paste0("Counts for ", colnames(testing_data$Column.types)[i], sep = "")
+        print(kable(count.table, row.names = FALSE, longtable = TRUE, booktabs = TRUE, caption = caption.text) %>%
+            add_header_above(header.above) %>%
+            kable_styling(latex_options = c("striped", "repeat_header"))
+        )
+    }
+}
+```
+
