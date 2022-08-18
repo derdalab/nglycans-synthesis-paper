@@ -1,0 +1,8 @@
+Type,Reference,Filename,Columns,Dictionary,Labels,ExcludedSDBs,OrderTable
+Plasma,,20220715-87JHcoAIA-IC,"1,2,3,4,5,6",JH,Axis.name,,Ellen
+Spleen,Plasma,20220715-87JHyqAIA-IC,"2,3,4,5,6",JH,Axis.name,,Ellen
+Liver,Plasma,20220715-87JHslAIA-IC,"1,2,3,4,5,6",JH,Axis.name,,Ellen
+Kidney L,Plasma,20220715-87JHvqAIA-IC,"2,3,4,5,6",JH,Axis.name,,Ellen
+Kidney R,Plasma,20220715-87JHiqAIA-IC,"1,2,3,4,5,6",JH,Axis.name,,Ellen
+Heart,Plasma,20220715-87JHkmAIA-IC,"1,2,4,5,6",JH,Axis.name,,Ellen
+Lungs,Plasma,20220715-87JHjoAIA-IC,"4,5,6,3",JH,Axis.name,,Ellen
